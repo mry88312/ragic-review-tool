@@ -1,6 +1,3 @@
 {
-  "app_type": "static",
-  "static": {
-    "base": "."
-  }
+  "app_type": "static"
 }
