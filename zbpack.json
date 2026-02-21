@@ -1,0 +1,6 @@
+{
+  "app_type": "static",
+  "static": {
+    "base": "."
+  }
+}

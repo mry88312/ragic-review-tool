@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ragic 表單梳理工具 - 一方生活</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-box .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .export-btn {
+            padding: 10px 24px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .table-container {
+            padding: 30px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .form-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .form-url {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .form-url a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .form-url a:hover {
+            text-decoration: underline;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        .badge-keep {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-merge {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-remove {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-pending {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .status-select {
+            padding: 6px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .status-select:hover {
+            border-color: #667eea;
+        }
+
+        .status-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .notes-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .notes-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e0e0e0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .field-count {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .frequency {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .frequency-high {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .frequency-medium {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+
+        .frequency-low {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .module-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        .pagination {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .page-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .page-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🗂️ Ragic 表單梳理工具</h1>
+            <p>完整檢視與管理 467 個表單 | 一方生活營運系統</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number" id="totalCount">467</div>
+                <div class="label">總表單數</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="keepCount">0</div>
+                <div class="label">✅ 保留</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="mergeCount">0</div>
+                <div class="label">🔄 整合</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="removeCount">0</div>
+                <div class="label">🗑️ 廢棄</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="reviewedCount">0</div>
+                <div class="label">已審查</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="progressPercent">0%</div>
+                <div class="label">完成度</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 搜尋表單名稱、功能、備註...">
+                <span class="search-icon">⌘K</span>
+            </div>
+
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">全部</button>
+                <button class="filter-btn" data-filter="pending">待審查</button>
+                <button class="filter-btn" data-filter="keep">保留</button>
+                <button class="filter-btn" data-filter="merge">整合</button>
+                <button class="filter-btn" data-filter="remove">廢棄</button>
+            </div>
+
+            <button class="export-btn" onclick="exportDecisions()">📥 匯出決定</button>
+        </div>
+
+        <div class="table-container">
+            <table id="formsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px">#</th>
+                        <th style="width: 120px">模組</th>
+                        <th style="width: 250px">表單名稱</th>
+                        <th style="width: 80px">欄位數</th>
+                        <th style="width: 100px">使用頻率</th>
+                        <th style="width: 200px">功能簡述</th>
+                        <th style="width: 120px">原建議</th>
+                        <th style="width: 140px">決定</th>
+                        <th style="width: 300px">備註</th>
+                    </tr>
+                </thead>
+                <tbody id="formsTableBody">
+                    <!-- Will be populated by JavaScript -->
+                </tbody>
+            </table>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p>沒有找到符合條件的表單</p>
+            </div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <script>
+        let forms = [];
+        let filteredForms = [];
+        let currentFilter = 'all';
+        let currentPage = 1;
+        const itemsPerPage = 50;
+
+        // Parse CSV
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n');
+            const headers = lines[0].split(',');
+            
+            return lines.slice(1).map((line, index) => {
+                const values = parseCSVLine(line);
+                const obj = { id: index + 1, decision: 'pending', notes: '' };
+                headers.forEach((header, i) => {
+                    obj[header.trim()] = values[i] ? values[i].trim() : '';
+                });
+                return obj;
+            });
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            return result;
+        }
+
+        // Initialize (removed - now handled by loadCSVData)
+
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('formsTableBody');
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageData = filteredForms.slice(start, end);
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = '';
+                document.getElementById('emptyState').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('emptyState').style.display = 'none';
+
+            tbody.innerHTML = pageData.map(form => `
+                <tr data-id="${form.id}">
+                    <td>${form.id}</td>
+                    <td><span class="module-tag">${form['頁籤名稱'] || '-'}</span></td>
+                    <td>
+                        <div class="form-name">${form['表單名稱'] || '-'}</div>
+                        <div class="form-url"><a href="${form['表單網址']}" target="_blank">查看表單</a></div>
+                    </td>
+                    <td><span class="field-count">${form['欄位數量']} 欄位</span></td>
+                    <td><span class="frequency frequency-${(form['使用頻率推論'] || 'low').toLowerCase()}">${form['使用頻率推論'] || '低'}</span></td>
+                    <td>${form['表單功能簡述'] || '-'}</td>
+                    <td>
+                        ${getBadge(form['表單狀態建議'])}
+                    </td>
+                    <td>
+                        <select class="status-select" data-id="${form.id}" onchange="updateDecision(${form.id}, this.value)">
+                            <option value="pending" ${form.decision === 'pending' ? 'selected' : ''}>⏳ 待審查</option>
+                            <option value="keep" ${form.decision === 'keep' ? 'selected' : ''}>✅ 保留</option>
+                            <option value="merge" ${form.decision === 'merge' ? 'selected' : ''}>🔄 整合</option>
+                            <option value="remove" ${form.decision === 'remove' ? 'selected' : ''}>🗑️ 廢棄</option>
+                        </select>
+                    </td>
+                    <td>
+                        <textarea class="notes-input" data-id="${form.id}" placeholder="備註..." onchange="updateNotes(${form.id}, this.value)">${form.notes}</textarea>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderPagination();
+        }
+
+        function getBadge(status) {
+            if (!status) return '<span class="badge badge-pending">未分類</span>';
+            if (status.includes('保留')) return '<span class="badge badge-keep">✅ 保留</span>';
+            if (status.includes('合併') || status.includes('整合')) return '<span class="badge badge-merge">🔄 整合</span>';
+            if (status.includes('廢棄')) return '<span class="badge badge-remove">🗑️ 廢棄</span>';
+            return '<span class="badge badge-pending">待確認</span>';
+        }
+
+        // Pagination
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredForms.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            if (currentPage > 1) {
+                html += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">← 上一頁</button>`;
+            }
+
+            for (let i = 1; i <= Math.min(totalPages, 10); i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            }
+
+            if (currentPage < totalPages) {
+                html += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">下一頁 →</button>`;
+            }
+
+            pagination.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderTable();
+            window.scrollTo(0, 0);
+        }
+
+        // Update decision
+        function updateDecision(id, decision) {
+            const form = forms.find(f => f.id === id);
+            if (form) {
+                form.decision = decision;
+                updateStats();
+                saveToLocalStorage();
+            }
+        }
+
+        // Update notes
+        function updateNotes(id, notes) {
+            const form = forms.find(f => f.id === id);
+            if (form) {
+                form.notes = notes;
+                saveToLocalStorage();
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            const keep = forms.filter(f => f.decision === 'keep').length;
+            const merge = forms.filter(f => f.decision === 'merge').length;
+            const remove = forms.filter(f => f.decision === 'remove').length;
+            const reviewed = keep + merge + remove;
+            const progress = Math.round((reviewed / forms.length) * 100);
+
+            document.getElementById('keepCount').textContent = keep;
+            document.getElementById('mergeCount').textContent = merge;
+            document.getElementById('removeCount').textContent = remove;
+            document.getElementById('reviewedCount').textContent = reviewed;
+            document.getElementById('progressPercent').textContent = progress + '%';
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // Filter
+        function applyFilter(filter) {
+            currentFilter = filter;
+            currentPage = 1;
+
+            if (filter === 'all') {
+                filteredForms = forms;
+            } else if (filter === 'pending') {
+                filteredForms = forms.filter(f => f.decision === 'pending');
+            } else {
+                filteredForms = forms.filter(f => f.decision === filter);
+            }
+
+            applySearch();
+        }
+
+        // Search
+        function applySearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!query) {
+                renderTable();
+                return;
+            }
+
+            filteredForms = filteredForms.filter(form => {
+                return (
+                    (form['表單名稱'] || '').toLowerCase().includes(query) ||
+                    (form['表單功能簡述'] || '').toLowerCase().includes(query) ||
+                    (form['備註與建議'] || '').toLowerCase().includes(query) ||
+                    (form['頁籤名稱'] || '').toLowerCase().includes(query) ||
+                    (form.notes || '').toLowerCase().includes(query)
+                );
+            });
+
+            renderTable();
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', () => {
+                currentPage = 1;
+                applyFilter(currentFilter);
+            });
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    applyFilter(this.dataset.filter);
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+            });
+        }
+
+        // Export decisions
+        function exportDecisions() {
+            const decisions = forms.map(f => ({
+                id: f.id,
+                模組: f['頁籤名稱'],
+                表單名稱: f['表單名稱'],
+                表單網址: f['表單網址'],
+                原建議: f['表單狀態建議'],
+                決定: f.decision === 'pending' ? '待審查' : 
+                     f.decision === 'keep' ? '保留' :
+                     f.decision === 'merge' ? '整合' : '廢棄',
+                備註: f.notes
+            }));
+
+            const csv = [
+                Object.keys(decisions[0]).join(','),
+                ...decisions.map(d => Object.values(d).map(v => `"${v}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `ragic-review-${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        }
+
+        // Local storage
+        function saveToLocalStorage() {
+            const data = forms.map(f => ({ id: f.id, decision: f.decision, notes: f.notes }));
+            localStorage.setItem('ragicReview', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('ragicReview');
+            if (saved) {
+                const data = JSON.parse(saved);
+                data.forEach(d => {
+                    const form = forms.find(f => f.id === d.id);
+                    if (form) {
+                        form.decision = d.decision;
+                        form.notes = d.notes;
+                    }
+                });
+            }
+        }
+
+        // Load CSV from file
+        async function loadCSVData() {
+            try {
+                const response = await fetch('ragic-forms-data.csv');
+                const csvText = await response.text();
+                
+                // Parse CSV
+                forms = parseCSV(csvText);
+                filteredForms = forms;
+                
+                // Load saved decisions
+                loadFromLocalStorage();
+                
+                // Render
+                renderTable();
+                updateStats();
+            } catch (error) {
+                console.error('Failed to load CSV:', error);
+                alert('無法載入表單資料。請確認 ragic-forms-data.csv 檔案存在。');
+            }
+        }
+
+        // Start
+        loadCSVData();
+        setupEventListeners();
+    </script>
+</body>
+</html>
